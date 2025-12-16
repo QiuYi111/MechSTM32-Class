@@ -14,6 +14,8 @@ stm32/
 │   ├── adc.h / adc.c       # ADC 采集驱动
 │   ├── key.h / key.c       # 按键输入驱动
 │   ├── pwm.h / pwm.c       # PWM 输出驱动
+│   ├── lcd.h / lcd.c       # LCD 屏幕驱动
+│   ├── motor.h / motor.c   # 直流电机驱动
 │   └── delay.h / delay.c   # 延时函数
 │
 ├── exp/                    # 📝 实验示例
@@ -150,7 +152,7 @@ UART_Init(USART1, &config);
 | 2 | LED 亮度随电位器变化 |
 | 3 | 跑马灯，电位器控速，按键换向 |
 
-### `exp/interupt_mian.c` - 中断实验
+### `exp/interrupt_main.c` - 中断实验
 
 通过 `#define ACTIVE_EXPERIMENT` 切换实验:
 
@@ -161,6 +163,17 @@ UART_Init(USART1, &config);
 | `EXPERIMENT_VARIABLE_BLINK` | 可变频率闪烁 |
 | `EXPERIMENT_PWM_BRIGHTNESS` | PWM 亮度控制 |
 | `EXPERIMENT_BREATHING_LIGHT` | 呼吸灯效果 |
+
+### `User/source/experiment_lcd.c` - LCD & 电机实验
+
+![LCD Experiment](assets/lcd.jpg)
+
+通过 `main.c` 中的 `#define EXPERIMENT` 切换:
+
+| 实验 | 名称 | 功能 |
+|---|---|---|
+| 1 | **Shapes** | 在 LCD 上绘制三角形、矩形和圆（轮廓及填充） |
+| 2 | **Motor** | 电位器控制电机速度，显示运行状态和时间 |
 
 ---
 
