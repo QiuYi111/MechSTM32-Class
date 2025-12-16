@@ -6,6 +6,8 @@
 ".\objects\led.o"
 ".\objects\key.o"
 ".\objects\uart.o"
+".\objects\adc.o"
+".\objects\pwm.o"
 ".\objects\misc.o"
 ".\objects\stm32f10x_adc.o"
 ".\objects\stm32f10x_bkp.o"

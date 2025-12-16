@@ -4,7 +4,7 @@
 #define LED_GPIO_RCC RCC_APB2Periph_GPIOC // LED 所在的 GPIO 时钟
 
 /* 高电平为激活*/
-#define LED_ACTIVE_HIGH 1
+#define LED_ACTIVE_HIGH 0
 
 //定义 LED 引脚
 static const uint16_t led_pins[LED_COUNT] = {

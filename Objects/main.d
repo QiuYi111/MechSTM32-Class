@@ -36,3 +36,6 @@
 .\objects\main.o: .\User\include\delay.h
 .\objects\main.o: .\User\include\uart.h
 .\objects\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
+.\objects\main.o: .\User\include\key.h
+.\objects\main.o: .\BSP\adc.h
+.\objects\main.o: .\BSP\pwm.h
