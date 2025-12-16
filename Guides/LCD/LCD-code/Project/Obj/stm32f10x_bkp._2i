@@ -1,0 +1,6 @@
+-c --cpu Cortex-M3 -g -O0 --apcs=interwork --split_sections -I..\BaseDrive -I..\Libraries\CORE -I..\Libraries\STM32F10x_FWLib\inc -I..\Libraries\STM32F10x_FWLib\src -I..\USER -I..\ExternalDrive
+-I G:\3.EMCU-II整理程序\STM32F103发货资料\3.程序源码\1.基础实验\1.跑马灯实验\Project\RTE
+-I C:\Keil_v5\ARM\PACK\Keil\STM32F1xx_DFP\2.0.0\Device\Include
+-I C:\Keil_v5\ARM\CMSIS\Include
+-D__UVISION_VERSION="517" -DSTM32F10X_HD -DSTM32F10X_HD -DUSE_STDPERIPH_DRIVER
+-o .\obj\stm32f10x_bkp.o --omf_browse .\obj\stm32f10x_bkp.crf --depend .\obj\stm32f10x_bkp.d --feedback ".\Obj\LED.fed" "..\Libraries\STM32F10x_FWLib\src\stm32f10x_bkp.c"
