@@ -97,7 +97,6 @@ void LCD_SetCursor(u16 Xpos, u16 Ypos) {
 void LCD_Scan_Dir(u8 dir) {
   u16 regval = 0;
   u16 dirreg = 0;
-  u16 temp;
 
   if (lcddev.dir == 0) // 横屏时，对6804和1963不改变扫描方向！竖屏时1963改变方向
   {
@@ -288,6 +287,39 @@ void LCD_DrawLine(u16 x1, u16 y1, u16 x2, u16 y2, u16 color) {
     if (yerr > distance) {
       yerr -= distance;
       uCol += incy;
+    }
+  }
+}
+
+void LCD_DrawRectangle(u16 x1, u16 y1, u16 x2, u16 y2, u16 color) {
+  LCD_DrawLine(x1, y1, x2, y1, color);
+  LCD_DrawLine(x1, y1, x1, y2, color);
+  LCD_DrawLine(x1, y2, x2, y2, color);
+  LCD_DrawLine(x2, y1, x2, y2, color);
+}
+
+void LCD_DrawCircle(u16 x0, u16 y0, u8 r, u16 color) {
+  int a, b;
+  int di;
+  a = 0;
+  b = r;
+  di = 3 - (r << 1); // 判断下个点位置的标志
+  while (a <= b) {
+    LCD_DrawPoint(x0 + a, y0 - b, color); // 5
+    LCD_DrawPoint(x0 + b, y0 - a, color); // 0
+    LCD_DrawPoint(x0 + b, y0 + a, color); // 4
+    LCD_DrawPoint(x0 + a, y0 + b, color); // 6
+    LCD_DrawPoint(x0 - a, y0 + b, color); // 1
+    LCD_DrawPoint(x0 - b, y0 + a, color); // 3
+    LCD_DrawPoint(x0 - a, y0 - b, color); // 2
+    LCD_DrawPoint(x0 - b, y0 - a, color); // 7
+    a++;
+    // 使用Bresenham算法画圆
+    if (di < 0)
+      di += 4 * a + 6;
+    else {
+      di += 10 + 4 * (a - b);
+      b--;
     }
   }
 }

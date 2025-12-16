@@ -83,9 +83,10 @@ extern u16 BACK_COLOR;  //	背景颜色.默认为白色
 #define GREEN 0x07E0
 #define CYAN 0x7FFF
 #define YELLOW 0xFFE0
-#define BROWN 0XBC40 //	棕色
-#define BRRED 0XFC07 //	棕红色
-#define GRAY 0X8430  //	灰色
+#define BROWN 0XBC40  //	棕色
+#define BRRED 0XFC07  //	棕红色
+#define GRAY 0X8430   //	灰色
+#define ORANGE 0xFD20 // 橙色
 //	GUI颜色
 
 #define DARKBLUE 0X01CF  //	深蓝色
@@ -136,6 +137,8 @@ void LCD_Clear(u16 color);
 void LCD_DrawPoint(u16 x, u16 y, u16 color);
 void LCD_Fill(u16 x1, u16 y1, u16 x2, u16 y2, u16 color);
 void LCD_DrawLine(u16 x1, u16 y1, u16 x2, u16 y2, u16 color);
+void LCD_DrawRectangle(u16 x1, u16 y1, u16 x2, u16 y2, u16 color);
+void LCD_DrawCircle(u16 x0, u16 y0, u8 r, u16 color);
 void LCD_ShowChar(u16 x, u16 y, u8 num, u8 size, u16 color, u16 mode);
 void LCD_ShowString(u16 x, u16 y, u16 width, u16 height, u8 size, u8 *p,
                     u16 color);

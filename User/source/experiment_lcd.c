@@ -23,7 +23,7 @@ void DrawTriangle(u16 x1, u16 y1, u16 x2, u16 y2, u16 x3, u16 y3, u16 color) {
 
 // Simple scanline triangle fill (Reference implementation)
 void FillTriangle(u16 x1, u16 y1, u16 x2, u16 y2, u16 x3, u16 y3, u16 color) {
-  u16 a, b, y, last;
+  u16 a, b, y;
   // Sort vertices by Y
   if (y1 > y2) {
     swap(&y1, &y2);
@@ -59,34 +59,55 @@ void FillTriangle(u16 x1, u16 y1, u16 x2, u16 y2, u16 x3, u16 y3, u16 color) {
   }
 }
 
+// Scanline Circle Fill
+void FillCircle(u16 x0, u16 y0, u16 r, u16 color) {
+  int x = 0, y = r;
+  int d = 3 - 2 * r;
+  while (x <= y) {
+    LCD_DrawLine(x0 - x, y0 - y, x0 + x, y0 - y, color);
+    LCD_DrawLine(x0 - x, y0 + y, x0 + x, y0 + y, color);
+    LCD_DrawLine(x0 - y, y0 - x, x0 + y, y0 - x, color);
+    LCD_DrawLine(x0 - y, y0 + x, x0 + y, y0 + x, color);
+    if (d < 0)
+      d = d + 4 * x + 6;
+    else {
+      d = d + 4 * (x - y) + 10;
+      y--;
+    }
+    x++;
+  }
+}
+
 void Exp_DrawShapes(void) {
   LCD_Init();
   LCD_Clear(WHITE);
   POINT_COLOR = RED;
 
-  LCD_ShowString(10, 10, 200, 24, 24, (u8 *)"Experiment 1: Shapes", RED);
+  LCD_ShowString(10, 10, 300, 24, 24, (u8 *)"Experiment 1: Shapes (Grid)", RED);
 
-  // 1. Isosceles Triangle (Outline)
-  DrawTriangle(50, 150, 100, 50, 150, 150, BLUE);
-  LCD_ShowString(50, 160, 100, 16, 16, (u8 *)"Isosceles", BLACK);
+  // --- Row 1: Triangles ---
+  // Outline
+  DrawTriangle(50, 120, 100, 20, 150, 120, BLUE);
+  // Filled
+  FillTriangle(300, 120, 350, 20, 400, 120, RED);
 
-  // 2. Right Triangle (Outline)
-  DrawTriangle(200, 150, 200, 50, 280, 150, BLUE);
-  LCD_ShowString(200, 160, 100, 16, 16, (u8 *)"Right", BLACK);
+  LCD_ShowString(50, 130, 100, 16, 16, (u8 *)"Triangles", BLACK);
 
-  // 3. Arbitrary Triangle (Outline)
-  DrawTriangle(300, 120, 350, 60, 400, 140, BLUE);
-  LCD_ShowString(320, 160, 100, 16, 16, (u8 *)"Arbitrary", BLACK);
+  // --- Row 2: Rectangles ---
+  // Outline
+  LCD_DrawRectangle(50, 160, 150, 260, BLUE);
+  // Filled
+  LCD_Fill(300, 160, 400, 260, GREEN);
 
-  // 4. Filled Versions (below)
-  // Isosceles Filled
-  FillTriangle(50, 250, 100, 180, 150, 250, RED);
+  LCD_ShowString(50, 270, 100, 16, 16, (u8 *)"Rectangles", BLACK);
 
-  // Right Filled
-  FillTriangle(200, 250, 200, 180, 280, 250, GREEN);
+  // --- Row 3: Circles ---
+  // Outline
+  LCD_DrawCircle(100, 350, 50, BLUE);
+  // Filled
+  FillCircle(350, 350, 50, ORANGE);
 
-  // Arbitrary Filled
-  FillTriangle(300, 220, 350, 180, 400, 260, BLUE);
+  LCD_ShowString(50, 410, 100, 16, 16, (u8 *)"Circles", BLACK);
 }
 
 void Exp_MotorControl(void) {

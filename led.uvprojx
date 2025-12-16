@@ -404,6 +404,11 @@
               <FileType>1</FileType>
               <FilePath>.\User\source\stm32f10x_it.c</FilePath>
             </File>
+            <File>
+              <FileName>experiment_lcd.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\User\source\experiment_lcd.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -438,6 +443,16 @@
               <FileName>pwm.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\BSP\pwm.c</FilePath>
+            </File>
+            <File>
+              <FileName>motor.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\BSP\motor.c</FilePath>
+            </File>
+            <File>
+               <FileName>lcd.c</FileName>
+               <FileType>1</FileType>
+               <FilePath>.\BSP\lcd.c</FilePath>
             </File>
           </Files>
         </Group>
