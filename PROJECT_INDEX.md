@@ -1,6 +1,6 @@
 # Project Index: STM32 LED Control Project
 
-**Generated**: 2025-12-02
+**Generated**: 2025-12-16
 **MCU**: STM32F103ZE (Cortex-M3)
 **IDE**: Keil µVision 5
 **Purpose**: ADC-controlled LED experiments with UART communication
@@ -16,7 +16,8 @@ stm32/
 │   ├── key.h/c                   # Key input handling
 │   ├── uart.h/c                  # UART communication driver
 │   ├── delay.h/c                 # Delay functions
-│   └── adc.h/c                   # ADC driver (potentiometer input)
+│   ├── adc.h/c                   # ADC driver (potentiometer input)
+│   └── pwm.h/c                   # Software PWM driver for LED brightness
 ├── User/                         # Application code
 │   ├── source/
 │   │   ├── main.c                # Main application entry point
@@ -83,8 +84,16 @@ stm32/
 
 **Module: ADC Driver** (`BSP/adc.h/c`)
 - **Purpose**: Potentiometer reading and voltage conversion
-- **API**: `ADC_Init()`, `ADC_ReadValue()`, `ADC_ReadVoltage()`
+- **API**: `ADC_Config()`, `ADC_ReadValue()`, `ADC_ReadVoltage()`
 - **Channel**: PA1 (ADC_CHANNEL_1)
+
+**Module: PWM Driver** (`BSP/pwm.h/c`)
+- **Purpose**: Software PWM for LED brightness control
+- **Features**:
+  - Software-based PWM (no hardware timer required)
+  - 0-100% duty cycle control
+  - Uses LED module for output
+- **API**: `PWM_Init()`, `PWM_SetDutyCycle()`, `PWM_Update()`
 
 ### Application: Main Control Logic
 
