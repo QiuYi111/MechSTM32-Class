@@ -20,10 +20,14 @@ stm32/
 │   └── pwm.h/c                   # Software PWM driver for LED brightness
 ├── User/                         # Application code
 │   ├── source/
-│   │   ├── main.c                # Main application entry point
 │   │   ├── stm32f10x_it.c        # Interrupt handlers
 │   │   └── system_stm32f10x.c    # System initialization
 │   └── include/                  # User headers
+├── exp/                          # Experiment implementations (Alternative Entry Points)
+│   ├── adc_main.c                # ADC & UART experiments (Voltage, Brightness, Running Light)
+│   └── interupt_mian.c           # Interrupt & Timer experiments (Stopwatch, Variable Blink)
+├── Guides/                       # Documentation and Guides
+│   └── LCD/                      # LCD Experiment resources
 ├── Libraries/                    # STM32 Standard Peripheral Library
 │   ├── inc/                      # SPL headers (25+ peripheral headers)
 │   └── src/                      # SPL source files (25+ peripheral drivers)
@@ -41,10 +45,17 @@ stm32/
 
 ### Primary Entry Points
 
-- **`User/source/main.c`** - Main application with 3 selectable experiments
+- **NOTE**: `User/source/main.c` is currently missing from the file system but referenced in `led.uvprojx`.
+- **`exp/adc_main.c`** - ADC & UART Experiments
   - `EXPERIMENT 1`: ADC voltage monitoring via UART
   - `EXPERIMENT 2`: LED brightness control based on ADC input
   - `EXPERIMENT 3`: Running light with speed/direction control
+- **`exp/interupt_mian.c`** - Interrupt & Timer Experiments (Filename contains typo)
+  - `EXPERIMENT_INTERRUPT_TOGGLE`: Button interrupt toggles pattern
+  - `EXPERIMENT_STOPWATCH_BINARY`: Binary counter
+  - `EXPERIMENT_VARIABLE_BLINK`: Variable blink rate
+  - `EXPERIMENT_PWM_BRIGHTNESS`: PWM Brightness Demo
+  - `EXPERIMENT_BREATHING_LIGHT`: Breathing Light Effect
 
 - **`startup/startup_stm32f10x_hd.s`** - Assembly startup and vector table
   - Stack: 1KB (0x400)
@@ -97,14 +108,21 @@ stm32/
 
 ### Application: Main Control Logic
 
-**Module: Experiment Controller** (`User/source/main.c`)
-- **Purpose**: Switch between 3 ADC/LED experiments
-- **Configuration**: `EXPERIMENT` macro (1-3) selects experiment at compile time
+**Module: ADC Experiments** (`exp/adc_main.c`)
+- **Purpose**: ADC and UART based control logic
+- **Configuration**: `EXPERIMENT` macro (1-3) selects active experiment
 - **Key Functions**:
-  - `System_Init()` - Initialize all peripherals (NVIC, SysTick, LED, Key, ADC)
-  - `Experiment1_DisplayVoltage()` - ADC voltage monitoring via UART
-  - `Experiment2_LED_BrightnessControl()` - LED brightness based on ADC input
-  - `Experiment3_RunningLightControl()` - Running light with ADC speed and key direction control
+  - `Experiment1_DisplayVoltage()` - UART voltage monitor
+  - `Experiment2_LED_BrightnessControl()` - ADC->PWM brightness
+  - `Experiment3_RunningLightControl()` - ADC speed control
+
+**Module: Interrupt Experiments** (`exp/interupt_mian.c`)
+- **Purpose**: Timer and External Interrupt logic
+- **Configuration**: `ACTIVE_EXPERIMENT` macro selects active mode
+- **Key Functions**:
+  - `experiment_interrupt_toggle()` - EXTI Key toggle
+  - `experiment_variable_blink()` - Timer-based blinking
+  - `experiment_breathing_light()` - PWM breathing effect
 
 ### System: STM32 Standard Peripheral Library
 
@@ -195,13 +213,22 @@ stm32/
 # 1. Open Keil µVision project
 open led.uvprojx
 
-# 2. Select experiment (edit main.c:11)
-#define EXPERIMENT 1  # Choose 1-3
+# 2. Fix Project Configuration (Important!)
+# The project currently references a missing `User/source/main.c`.
+# You must remove it from the "User" group and add either:
+# - `exp/adc_main.c` OR
+# - `exp/interupt_mian.c`
 
-# 3. Build project
+# 3. Select experiment
+# If using adc_main.c:
+#   Edit `exp/adc_main.c` and change `EXPERIMENT` macro
+# If using interupt_mian.c:
+#   Edit `exp/interupt_mian.c` and change `ACTIVE_EXPERIMENT` macro
+
+# 4. Build project
 Project → Build Target  # or F7
 
-# 4. Flash to target
+# 5. Flash to target
 Flash → Download  # or F8
 ```
 
