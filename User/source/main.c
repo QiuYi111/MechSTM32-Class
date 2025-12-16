@@ -29,9 +29,9 @@ int main(void) {
     Exp_DrawShapes();
     // Stop here or loop? Shapes are static, so maybe just stop or blink LED
     while (1) {
-      LED_Set(LED1, LED_ON);
+      LED_WriteMask(0x01); // LED1 ON
       delay_ms(500);
-      LED_Set(LED1, LED_OFF);
+      LED_WriteMask(0x00); // All OFF
       delay_ms(500);
     }
 #elif EXPERIMENT == 2

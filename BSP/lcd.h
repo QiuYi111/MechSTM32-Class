@@ -4,6 +4,11 @@
 #include "stm32f10x.h"
 #include <stdlib.h>
 
+typedef uint16_t u16;
+typedef uint8_t u8;
+typedef uint32_t u32;
+typedef volatile uint16_t vu16;
+
 #define LCD_W 480
 #define LCD_H 272
 
@@ -136,4 +141,3 @@ void LCD_ShowString(u16 x, u16 y, u16 width, u16 height, u8 size, u8 *p,
                     u16 color);
 
 #endif
-```

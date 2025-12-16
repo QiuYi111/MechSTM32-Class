@@ -196,11 +196,11 @@ void LCD_Display_Dir(u8 dir) {
     lcddev.width = 240;
     lcddev.height = 320;
     if (lcddev.id == 0X1963) {
-      lcddev.wramcmd = ;   //  设置写入GRAM的指令
-      lcddev.setxcmd = ;   //  设置写X坐标指令
-      lcddev.setycmd = ;   //  设置写Y坐标指令
-      lcddev.width = 480;  //  设置宽度480
-      lcddev.height = 800; //  设置高度800
+      lcddev.wramcmd = 0x2C; //  设置写入GRAM的指令
+      lcddev.setxcmd = 0x2A; //  设置写X坐标指令
+      lcddev.setycmd = 0x2B; //  设置写Y坐标指令
+      lcddev.width = 480;    //  设置宽度480
+      lcddev.height = 800;   //  设置高度800
     }
 
   } else //  横屏
@@ -209,18 +209,17 @@ void LCD_Display_Dir(u8 dir) {
     lcddev.width = 320;
     lcddev.height = 240;
     if (lcddev.id == 0X1963) {
-      lcddev.wramcmd = ;   //  设置写入GRAM的指令
-      lcddev.setxcmd = ;   //  设置写X坐标指令
-      lcddev.setycmd = ;   //  设置写Y坐标指令
-      lcddev.width = 800;  //  设置宽度800
-      lcddev.height = 480; //  设置高度480
+      lcddev.wramcmd = 0x2C; //  设置写入GRAM的指令
+      lcddev.setxcmd = 0x2A; //  设置写X坐标指令
+      lcddev.setycmd = 0x2B; //  设置写Y坐标指令
+      lcddev.width = 800;    //  设置宽度800
+      lcddev.height = 480;   //  设置高度480
     }
   }
   LCD_Scan_Dir(DFT_SCAN_DIR); //  默认扫描方向
 }
 
 void LCD_Clear(u16 color) {
-  u32 index = 0;
   u32 index = 0;
   u32 totalpoint = lcddev.width;
   totalpoint *= lcddev.height; // 得到总点数
@@ -407,8 +406,8 @@ void LCD_Init(void) {
   readWriteTiming.FSMC_AccessMode = FSMC_AccessMode_A; //	模式A
 
   writeTiming.FSMC_AddressSetupTime = 0x00; //	地址建立时间（ADDSET）为1个HCLK
-  writeTiming.FSMC_AddressHoldTime = 0x00; //	地址保持时间（A
-  writeTiming.FSMC_DataSetupTime = 0x03;   //	数据保存时间为4个HCLK
+  writeTiming.FSMC_AddressHoldTime = 0x00;  //	地址保持时间（A
+  writeTiming.FSMC_DataSetupTime = 0x03;    //	数据保存时间为4个HCLK
   writeTiming.FSMC_BusTurnAroundDuration = 0x00;
   writeTiming.FSMC_CLKDivision = 0x00;
   writeTiming.FSMC_DataLatency = 0x00;
@@ -438,7 +437,7 @@ void LCD_Init(void) {
       FSMC_ExtendedMode_Enable; // 读写使用不同的时序
   FSMC_NORSRAMInitStructure.FSMC_WriteBurst = FSMC_WriteBurst_Disable;
   FSMC_NORSRAMInitStructure.FSMC_ReadWriteTimingStruct =
-      &readWriteTiming; // 读写时序
+      &readWriteTiming;                                            // 读写时序
   FSMC_NORSRAMInitStructure.FSMC_WriteTimingStruct = &writeTiming; //	写时序
 
   FSMC_NORSRAMInit(&FSMC_NORSRAMInitStructure); //	初始化FSMC配置
@@ -453,7 +452,8 @@ void LCD_Init(void) {
   lcddev.id <<= 8;
   lcddev.id |= LCD_RD_DATA(); //	读回0X61
   if (lcddev.id == 0X5761) {
-    lcddev.id = 0X1963; //	SSD1963读回的ID是5761H,为方便区分,我们强制设置为1963
+    lcddev.id =
+        0X1963; //	SSD1963读回的ID是5761H,为方便区分,我们强制设置为1963
   }
 
   if (lcddev.id == 0X1963) {
@@ -527,7 +527,7 @@ void LCD_Init(void) {
     LCD_WR_REG(0xF0);  //  设置SSD1963与CPU接口为16bit
     LCD_WR_DATA(0x03); //  16-bit(565 format) data for 16bpp
 
-    LCD_WR_REG(); //  开启显示
+    LCD_WR_REG(0x29); //  开启显示
 
     //  设置PWM输出  背光通过占空比可调
     LCD_WR_REG(0xD0);  //  设置自动白平衡DBC
@@ -545,7 +545,7 @@ void LCD_Init(void) {
     LCD_WR_DATA(0x03); //  2个IO口设置成输出
     LCD_WR_DATA(0x01); //  GPIO使用正常的IO功能
 
-    LCD_WR_REG(); //  开启显示
+    LCD_WR_REG(0x29); //  开启显示
   }
   LCD_Display_Dir(1); //	默认为横屏
   LCD_BL_H;           //	点亮背光
