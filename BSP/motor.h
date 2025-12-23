@@ -6,5 +6,7 @@
 void Motor_Init(void);
 void Motor_SetSpeed(uint16_t speed); // 0-100
 void Motor_SetDir(uint8_t dir);      // 0: Forward, 1: Reverse
+uint16_t Motor_GetSpeedRPM(void);
+void Motor_UpdateStats(void); // Call every 1 second
 
 #endif

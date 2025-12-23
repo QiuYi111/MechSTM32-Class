@@ -141,6 +141,9 @@ void Exp_MotorControl(void) {
       time_sec++;
       if (time_sec >= 3600)
         time_sec = 0; // Wrap at 1 hour
+
+      // Update Motor RPM every 1 second
+      Motor_UpdateStats();
     }
 
     // Display Timer
@@ -171,9 +174,13 @@ void Exp_MotorControl(void) {
     sprintf(buf, "Speed: %3d %%", speed);
     LCD_ShowString(10, 110, 200, 24, 24, (u8 *)buf, GREEN);
 
+    uint16_t rpm = Motor_GetSpeedRPM();
+    sprintf(buf, "RPM: %4d", rpm);
+    LCD_ShowString(10, 140, 200, 24, 24, (u8 *)buf, GREEN);
+
     if (dir == 0)
-      LCD_ShowString(10, 140, 200, 24, 24, (u8 *)"Dir: Forward ", CYAN);
+      LCD_ShowString(10, 170, 200, 24, 24, (u8 *)"Dir: Forward ", CYAN);
     else
-      LCD_ShowString(10, 140, 200, 24, 24, (u8 *)"Dir: Reverse ", CYAN);
+      LCD_ShowString(10, 170, 200, 24, 24, (u8 *)"Dir: Reverse ", CYAN);
   }
 }
