@@ -1,15 +1,20 @@
 
 #include "motor.h"
 
-    // Motor PWM FWD: PF9
-    // Motor PWM REV: PF10
-    // Motor Speed Feedbk: PF11 (EXTI11)
+// Motor PWM FWD: PF9
+// Motor PWM REV: PF10
+// Motor Speed Feedbk: PF11 (EXTI11)
 
-    static volatile uint32_t pulse_count = 0;
+static volatile uint32_t pulse_count = 0;
 static uint16_t current_rpm = 0;
 static uint8_t current_dir = 0;             // 0: FWD, 1: REV
 static volatile uint16_t current_speed = 0; // 0-100
 static volatile uint16_t soft_pwm_cnt = 0;
+
+// Filter for encoder crosstalk
+static volatile uint32_t tick_100us = 0;
+static volatile uint32_t last_pulse_tick = 0;
+#define ENCODER_BLANKING_TICKS 5 // 500us (PWM noise is 100us)
 
 void Motor_Init(void) {
   GPIO_InitTypeDef GPIO_InitStructure;
@@ -76,16 +81,23 @@ void Motor_SetDir(uint8_t dir) { current_dir = dir; }
 
 uint16_t Motor_GetSpeedRPM(void) { return current_rpm; }
 
-// Call this every 1 second (e.g. from main loop or timer)
+// Call this every 100ms (now updated from experiment_lcd.c)
 void Motor_UpdateStats(void) {
-  // Simple RPM calculation assuming 20 pulses per revolution
-  current_rpm = (pulse_count * 60) / 20;
+  // RPM calculation over 100ms:
+  // pulses_per_sec = pulse_count * 10
+  // RPM = (pulses_per_sec * 60) / 40 = pulse_count * 15
+  uint16_t new_rpm = (uint16_t)(pulse_count * 15);
   pulse_count = 0;
+
+  // Simple low-pass filter: 70% old, 30% new
+  current_rpm = (uint16_t)((current_rpm * 7 + new_rpm * 3) / 10);
 }
 
-// 10kHz Interrupt for Software PWM
+// 10kHz Interrupt for Software PWM & Timing
 void TIM3_IRQHandler(void) {
   if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET) {
+    tick_100us++; // Used for encoder filtering
+
     soft_pwm_cnt++;
     if (soft_pwm_cnt >= 100)
       soft_pwm_cnt = 0;
@@ -108,8 +120,12 @@ void TIM3_IRQHandler(void) {
 
 void EXTI15_10_IRQHandler(void) {
   if (EXTI_GetITStatus(EXTI_Line11) != RESET) {
-    pulse_count++;
+    // Software Filter: ignore pulses that are too close (noise from 10kHz PWM)
+    uint32_t now = tick_100us;
+    if ((now - last_pulse_tick) >= ENCODER_BLANKING_TICKS) {
+      pulse_count++;
+      last_pulse_tick = now;
+    }
     EXTI_ClearITPendingBit(EXTI_Line11);
   }
 }
-

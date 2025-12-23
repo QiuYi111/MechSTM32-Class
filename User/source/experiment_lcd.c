@@ -136,14 +136,15 @@ void Exp_MotorControl(void) {
     // 1. Timer Logic (Approximate 1 sec)
     delay_ms(100); // 100ms update rate
     tick_count++;
+
+    // Update Motor RPM every 100ms (every tick) for higher sensitivity
+    Motor_UpdateStats();
+
     if (tick_count >= 10) {
       tick_count = 0;
       time_sec++;
       if (time_sec >= 3600)
         time_sec = 0; // Wrap at 1 hour
-
-      // Update Motor RPM every 1 second
-      Motor_UpdateStats();
     }
 
     // Display Timer
