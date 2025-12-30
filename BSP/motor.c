@@ -35,9 +35,9 @@ void Motor_Init(void) {
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
   GPIO_Init(GPIOF, &GPIO_InitStructure);
 
-  // 4. TIM3 Config (Software PWM Timer) - 10kHz
-  // 72MHz / 72 = 1MHz clock -> 100 ticks = 100us (10kHz interrupt)
-  TIM_TimeBaseStructure.TIM_Period = 99;
+  // 4. TIM3 Config (Software PWM & Oversampling Timer) - 20kHz
+  // 72MHz / 72 = 1MHz clock -> 50 ticks = 50us (20kHz interrupt)
+  TIM_TimeBaseStructure.TIM_Period = 49;
   TIM_TimeBaseStructure.TIM_Prescaler = 71;
   TIM_TimeBaseStructure.TIM_ClockDivision = 0;
   TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
@@ -52,24 +52,6 @@ void Motor_Init(void) {
   NVIC_Init(&NVIC_InitStructure);
 
   TIM_Cmd(TIM3, ENABLE);
-
-  // 5. TIM4 Config (Oversampling Timer) - 20kHz
-  RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
-  // 72MHz / 72 = 1MHz clock -> 50 ticks = 50us (20kHz interrupt)
-  TIM_TimeBaseStructure.TIM_Period = 49;
-  TIM_TimeBaseStructure.TIM_Prescaler = 71;
-  TIM_TimeBaseInit(TIM4, &TIM_TimeBaseStructure);
-
-  TIM_ITConfig(TIM4, TIM_IT_Update, ENABLE);
-
-  NVIC_InitStructure.NVIC_IRQChannel = TIM4_IRQn;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority =
-      1; // High priority for sampling
-  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-  NVIC_Init(&NVIC_InitStructure);
-
-  TIM_Cmd(TIM4, ENABLE);
 }
 
 void Motor_SetSpeed(uint16_t speed) {
@@ -94,14 +76,23 @@ void Motor_UpdateStats(void) {
   current_rpm = (uint16_t)((current_rpm * 7 + new_rpm * 3) / 10);
 }
 
-// 10kHz Interrupt for Software PWM
+// 20kHz Interrupt for Software PWM & Oversampling
 void TIM3_IRQHandler(void) {
   if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET) {
+    // 1. Encoder Oversampling (20kHz)
+    uint8_t pin_state = GPIO_ReadInputDataBit(GPIOF, GPIO_Pin_11);
+    if (last_pin_state == 1 && pin_state == 0) { // Falling edge
+      pulse_count++;
+    }
+    last_pin_state = pin_state;
+
+    // 2. Software PWM (20kHz clock, Period=200 -> 100Hz PWM frequency)
     soft_pwm_cnt++;
-    if (soft_pwm_cnt >= 100)
+    if (soft_pwm_cnt >= 200)
       soft_pwm_cnt = 0;
 
-    if (soft_pwm_cnt < current_speed) {
+    // current_speed is 0-100, we map it to 0-200
+    if (soft_pwm_cnt < (current_speed * 2)) {
       if (current_dir == 0) { // Forward
         GPIO_SetBits(GPIOF, GPIO_Pin_9);
         GPIO_ResetBits(GPIOF, GPIO_Pin_10);
@@ -114,20 +105,5 @@ void TIM3_IRQHandler(void) {
     }
 
     TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
-  }
-}
-
-// 20kHz Interrupt for Oversampling Encoder
-void TIM4_IRQHandler(void) {
-  if (TIM_GetITStatus(TIM4, TIM_IT_Update) != RESET) {
-    uint8_t pin_state = GPIO_ReadInputDataBit(GPIOF, GPIO_Pin_11);
-
-    // Falling edge detection
-    if (last_pin_state == 1 && pin_state == 0) {
-      pulse_count++;
-    }
-    last_pin_state = pin_state;
-
-    TIM_ClearITPendingBit(TIM4, TIM_IT_Update);
   }
 }
