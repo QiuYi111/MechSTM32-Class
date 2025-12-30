@@ -4,16 +4,16 @@
 
 ---
 
-## � 库结构
+## 🏗️ 库结构
 
 ```
 stm32/
 ├── BSP/                    # 🔧 驱动库 (Board Support Package)
-│   ├── led.h / led.c       # LED 控制驱动
+│   ├── led.h / led.c       # LED 控制驱动 (PC0-PC3)
 │   ├── uart.h / uart.c     # 串口通信驱动
 │   ├── adc.h / adc.c       # ADC 采集驱动
 │   ├── key.h / key.c       # 按键输入驱动
-│   ├── pwm.h / pwm.c       # PWM 输出驱动
+│   ├── pwm.h / pwm.c       # 软件 PWM 驱动 (TIM3)
 │   ├── lcd.h / lcd.c       # LCD 屏幕驱动
 │   ├── motor.h / motor.c   # 直流电机驱动
 │   └── delay.h / delay.c   # 延时函数
@@ -22,14 +22,16 @@ stm32/
 │   ├── adc_main.c          # ADC 实验 (电压监测/亮度控制/跑马灯)
 │   └── interupt_mian.c     # 中断实验 (定时器/外部中断)
 │
-├── User/source/main.c      # 当前主程序入口
+├── User/source/            # 应用层代码
+│   ├── main.c              # 当前主程序入口
+│   └── experiment_lcd.c    # LCD 与电机综合实验
 ├── Libraries/              # ST 标准外设库
 └── led.uvprojx             # Keil 工程文件
 ```
 
 ---
 
-## � 快速上手
+## 🚀 快速上手
 
 ### 1. 使用库编写实验
 
@@ -131,12 +133,26 @@ UART_Init(USART1, &config);
 | `delay_us(us)` | 微秒延时 |
 
 ### PWM 驱动 `BSP/pwm.h`
+> [!NOTE]
+> 现已升级为基于 TIM3 的 20kHz 软件 PWM 实现，确保输出平滑。
 
 | 函数 | 说明 |
 |------|------|
-| `PWM_Init()` | 初始化软件 PWM |
+| `PWM_Init()` | 初始化 TIM3 软件 PWM (20kHz) |
 | `PWM_SetDutyCycle(duty)` | 设置占空比 (0-100) |
-| `PWM_Update()` | 更新 PWM 输出 (需循环调用) |
+| `PWM_Update()` | 更新 PWM 输出 (中断自动处理) |
+
+### 电机驱动 `BSP/motor.h`
+> [!IMPORTANT]
+> 使用 TIM3 (20kHz) 进行**过采样 (Oversampling)** 读取编码器，有效滤除高频噪声，配合低通滤波提供精确 RPM 反馈。
+
+| 函数 | 说明 |
+|------|------|
+| `Motor_Init()` | 初始化电机 GPIO 与过采样定时器 |
+| `Motor_SetSpeed(speed)` | 设置目标速度 (0-100) |
+| `Motor_SetDir(dir)` | 设置旋转方向 (0:FWD, 1:REV) |
+| `Motor_GetSpeedRPM()` | 获取当前转速 (RPM, 经过滤) |
+| `Motor_UpdateStats()` | 更新转速统计 (需 100ms 周期执行) |
 
 ---
 
@@ -164,16 +180,16 @@ UART_Init(USART1, &config);
 | `EXPERIMENT_PWM_BRIGHTNESS` | PWM 亮度控制 |
 | `EXPERIMENT_BREATHING_LIGHT` | 呼吸灯效果 |
 
-### `User/source/experiment_lcd.c` - LCD & 电机实验
+### `User/source/experiment_lcd.c` - LCD & 电机综合实验
 
 ![LCD Experiment](assets/lcd.jpg)
 
-通过 `main.c` 中的 `#define EXPERIMENT` 切换:
+在 `main.c` 中通过 `#define EXPERIMENT` 切换子实验：
 
 | 实验 | 名称 | 功能 |
 |---|---|---|
-| 1 | **Shapes** | 在 LCD 上绘制三角形、矩形和圆（轮廓及填充） |
-| 2 | **Motor** | 电位器控制电机速度，显示运行状态和时间 |
+| 1 | **Geometric Shapes** | 在 LCD 上绘制多边形与圆（实心填充，支持自定义坐标） |
+| 2 | **Motor Control** | 电位器实时调速，20kHz 过采样转速反馈，动态波形/数据展示 |
 
 ---
 
@@ -181,11 +197,11 @@ UART_Init(USART1, &config);
 
 | 功能 | 引脚 | 备注 |
 |------|------|------|
-| LED1-4 | PC0-PC3 | 输出 |
-| UART TX | PA9 / PB6 | 可重映射 |
-| UART RX | PA10 / PB7 | 可重映射 |
-| ADC | PA1 | 电位器输入 |
-| KEY | 见原理图 | S1/S2 |
+| LED1-4 | PC0-PC3 | 推挽输出 |
+| UART TX/RX | PA9 / PA10 | 115200 Baud |
+| ADC | PA1 | 电位器输入 (0-3.3V) |
+| 电机 PWM | PF9 / PF10 | 软件 PWM (FWD/REV) |
+| 编码器反馈 | PF11 | TIM3 过采样输入 |
 
 ---
 
