@@ -11,10 +11,7 @@ static uint8_t current_dir = 0;             // 0: FWD, 1: REV
 static volatile uint16_t current_speed = 0; // 0-100
 static volatile uint16_t soft_pwm_cnt = 0;
 
-// Filter for encoder crosstalk
-static volatile uint32_t tick_100us = 0;
-static volatile uint32_t last_pulse_tick = 0;
-#define ENCODER_BLANKING_TICKS 5 // 500us (PWM noise is 100us)
+static uint8_t last_pin_state = 1;
 
 void Motor_Init(void) {
   GPIO_InitTypeDef GPIO_InitStructure;
@@ -38,7 +35,7 @@ void Motor_Init(void) {
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
   GPIO_Init(GPIOF, &GPIO_InitStructure);
 
-  // 4. TIM3 Config (Software PWM Timer)
+  // 4. TIM3 Config (Software PWM Timer) - 10kHz
   // 72MHz / 72 = 1MHz clock -> 100 ticks = 100us (10kHz interrupt)
   TIM_TimeBaseStructure.TIM_Period = 99;
   TIM_TimeBaseStructure.TIM_Prescaler = 71;
@@ -56,19 +53,23 @@ void Motor_Init(void) {
 
   TIM_Cmd(TIM3, ENABLE);
 
-  // 5. EXTI Config for Speed Feedback (PF11)
-  GPIO_EXTILineConfig(GPIO_PortSourceGPIOF, GPIO_PinSource11);
-  EXTI_InitStructure.EXTI_Line = EXTI_Line11;
-  EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
-  EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
-  EXTI_InitStructure.EXTI_LineCmd = ENABLE;
-  EXTI_Init(&EXTI_InitStructure);
+  // 5. TIM4 Config (Oversampling Timer) - 20kHz
+  RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
+  // 72MHz / 72 = 1MHz clock -> 50 ticks = 50us (20kHz interrupt)
+  TIM_TimeBaseStructure.TIM_Period = 49;
+  TIM_TimeBaseStructure.TIM_Prescaler = 71;
+  TIM_TimeBaseInit(TIM4, &TIM_TimeBaseStructure);
 
-  NVIC_InitStructure.NVIC_IRQChannel = EXTI15_10_IRQn;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
-  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
+  TIM_ITConfig(TIM4, TIM_IT_Update, ENABLE);
+
+  NVIC_InitStructure.NVIC_IRQChannel = TIM4_IRQn;
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority =
+      1; // High priority for sampling
+  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
   NVIC_Init(&NVIC_InitStructure);
+
+  TIM_Cmd(TIM4, ENABLE);
 }
 
 void Motor_SetSpeed(uint16_t speed) {
@@ -93,11 +94,9 @@ void Motor_UpdateStats(void) {
   current_rpm = (uint16_t)((current_rpm * 7 + new_rpm * 3) / 10);
 }
 
-// 10kHz Interrupt for Software PWM & Timing
+// 10kHz Interrupt for Software PWM
 void TIM3_IRQHandler(void) {
   if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET) {
-    tick_100us++; // Used for encoder filtering
-
     soft_pwm_cnt++;
     if (soft_pwm_cnt >= 100)
       soft_pwm_cnt = 0;
@@ -118,14 +117,17 @@ void TIM3_IRQHandler(void) {
   }
 }
 
-void EXTI15_10_IRQHandler(void) {
-  if (EXTI_GetITStatus(EXTI_Line11) != RESET) {
-    // Software Filter: ignore pulses that are too close (noise from 10kHz PWM)
-    uint32_t now = tick_100us;
-    if ((now - last_pulse_tick) >= ENCODER_BLANKING_TICKS) {
+// 20kHz Interrupt for Oversampling Encoder
+void TIM4_IRQHandler(void) {
+  if (TIM_GetITStatus(TIM4, TIM_IT_Update) != RESET) {
+    uint8_t pin_state = GPIO_ReadInputDataBit(GPIOF, GPIO_Pin_11);
+
+    // Falling edge detection
+    if (last_pin_state == 1 && pin_state == 0) {
       pulse_count++;
-      last_pulse_tick = now;
     }
-    EXTI_ClearITPendingBit(EXTI_Line11);
+    last_pin_state = pin_state;
+
+    TIM_ClearITPendingBit(TIM4, TIM_IT_Update);
   }
 }
